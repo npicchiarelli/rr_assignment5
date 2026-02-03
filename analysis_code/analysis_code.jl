@@ -1,10 +1,12 @@
 using CSV
 using DataFrames
 using JSON
+using Plots
 using Statistics
 
 raw_data_dir = normpath(joinpath(@__DIR__, "..", "raw_data")) # For reproducibility, it is absolute but @__DIR__ outputs the pwd as a string
 processed_data_dir = normpath(joinpath(@__DIR__, "..", "processed_data"))
+output_dir = normpath(joinpath(@__DIR__, "..", "output"))
 
 # Check if directory exists
 !isdir(raw_data_dir) && begin
@@ -39,3 +41,19 @@ for file in readdir(processed_data_dir)
     end
 end
 println(df)
+
+p = plot(layout=(1, 3), size=(1200, 400)) # Initialize empty plot with 3 subplots
+binsize = 5. # μm
+for (i,file) in enumerate(readdir(processed_data_dir))
+    if endswith(file, "_processed.csv")
+        temp_df = CSV.read(joinpath(processed_data_dir, file), DataFrame)
+        min_diameter = minimum(temp_df.Diameter_μm)
+        max_diameter = maximum(temp_df.Diameter_μm)
+        bins = min_diameter:binsize:max_diameter
+        histogram!(p[i], temp_df.Diameter_μm, bins=bins, label=replace(file, "_processed.csv" => ""), xlabel="Diameter (μm)", ylabel="Frequency", title="Diametqer Distribution")
+        i += 1 # I know it is not elegand, will make it better later
+    end
+end
+
+display(p)
+savefig(p, joinpath(processed_data_dir, "diameter_distributions.png"))
