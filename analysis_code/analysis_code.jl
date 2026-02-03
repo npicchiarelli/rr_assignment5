@@ -6,7 +6,7 @@ using Statistics
 
 raw_data_dir = normpath(joinpath(@__DIR__, "..", "raw_data")) # For reproducibility, it is absolute but @__DIR__ outputs the pwd as a string
 processed_data_dir = normpath(joinpath(@__DIR__, "..", "processed_data"))
-output_dir = normpath(joinpath(@__DIR__, "..", "output"))
+plots_dir = normpath(joinpath(@__DIR__, "..", "outputs", "plots"))
 
 # Check if directory exists
 !isdir(raw_data_dir) && begin
@@ -50,10 +50,9 @@ for (i,file) in enumerate(readdir(processed_data_dir))
         min_diameter = minimum(temp_df.Diameter_μm)
         max_diameter = maximum(temp_df.Diameter_μm)
         bins = min_diameter:binsize:max_diameter
-        histogram!(p[i], temp_df.Diameter_μm, bins=bins, label=replace(file, "_processed.csv" => ""), xlabel="Diameter (μm)", ylabel="Frequency", title="Diametqer Distribution")
-        i += 1 # I know it is not elegand, will make it better later
+        histogram!(p[i], temp_df.Diameter_μm, bins=bins, label=replace(file, "_processed.csv" => ""), xlabel="Diameter (μm)", ylabel="Frequency", title="Diameter Distribution")
     end
 end
 
 display(p)
-savefig(p, joinpath(processed_data_dir, "diameter_distributions.png"))
+savefig(p, joinpath(plots_dir, "diameter_distributions.png"))
