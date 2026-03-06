@@ -3,14 +3,26 @@ using DataFrames
 using JSON
 using Plots
 using Statistics
+include("utilities.jl") # Include utility functions if needed
 
-raw_data_dir = normpath(joinpath(@__DIR__, "..", "raw_data")) # For reproducibility, it is absolute but @__DIR__ outputs the pwd as a string
+# Path setup
+raw_data_dir = normpath(joinpath(@__DIR__, "..", "raw_data")) # For reproducibility, @__DIR__ outputs the pwd as a string, so it works as well if the script is run from a different directory
 processed_data_dir = normpath(joinpath(@__DIR__, "..", "processed_data"))
 plots_dir = normpath(joinpath(@__DIR__, "..", "outputs", "plots"))
 
-# Check if directory exists
+# Error handling for directories
 !isdir(raw_data_dir) && begin
     error("Raw data directory does not exist: $raw_data_dir")
+end
+
+!isdir(processed_data_dir) && begin
+    println("Processed data directory does not exist. Creating: $processed_data_dir")
+    mkpath(processed_data_dir)
+end
+
+!isdir(plots_dir) && begin
+    println("Plots directory does not exist. Creating: $plots_dir")
+    mkpath(plots_dir)
 end
 
 metadata = JSON.parsefile(joinpath(raw_data_dir, "metadata.json"))
@@ -19,13 +31,15 @@ scale_factor = metadata["scale-factor-px-micron"]
 for file in readdir(raw_data_dir)
     println("Found file: $file")
     if endswith(file, ".csv") # Filter for CSV files
-        println("Processing file: $file")
+        println("Processing file: $file\n")
         data = CSV.read(joinpath(raw_data_dir, file), DataFrame)
-        data.Diameter_px = 2 * sqrt.(data.Area_px ./ π)
-        data.Diameter_μm = data.Diameter_px ./ scale_factor
+        data.Diameter_px = area2diam.(data.Area_px) # Compute diameter in pixels
+        data.Diameter_μm = px2micron.(data.Diameter_px, scale_factor) # Convert diameter to microns
 
         processed_data_fname = replace(file, ".csv" => "_processed.csv")
         CSV.write(joinpath(processed_data_dir, processed_data_fname), data[:,[:Area_px, :Diameter_μm]]) # Save only relevant columns
+    else
+        println("Skipping non-CSV file: $file\n")
     end
 end
 
@@ -40,9 +54,11 @@ for file in readdir(processed_data_dir)
         push!(df, (File=file_name, Min_Diameter_μm=min_diameter, Max_Diameter_μm=max_diameter, Median_Diameter_μm=median_diameter))
     end
 end
-println(df)
 
-p = plot(layout=(1, 3), size=(1200, 400)) # Initialize empty plot with 3 subplots
+println("Summary of Diameter Statistics:")
+println("$df\n")
+
+p = plot(layout=(1, 3), size=(1200, 350)) # Initialize empty plot with 3 subplots
 binsize = 5. # μm
 for (i,file) in enumerate(readdir(processed_data_dir))
     if endswith(file, "_processed.csv")
@@ -54,5 +70,5 @@ for (i,file) in enumerate(readdir(processed_data_dir))
     end
 end
 
-display(p)
+println("Saving diameter distribution plot to:")
 savefig(p, joinpath(plots_dir, "diameter_distributions.png"))
