@@ -33,6 +33,10 @@ for file in readdir(raw_data_dir)
     if endswith(file, ".csv") # Filter for CSV files
         println("Processing file: $file\n")
         data = CSV.read(joinpath(raw_data_dir, file), DataFrame)
+        if "Area_px" ∉ names(data)
+            println("Warning: 'Area_px' column not found in $file. Skipping this file.\n")
+            continue
+        end
         data.Diameter_px = area2diam.(data.Area_px) # Compute diameter in pixels
         data.Diameter_μm = px2micron.(data.Diameter_px, scale_factor) # Convert diameter to microns
 
