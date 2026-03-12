@@ -1,3 +1,5 @@
+module Utilities
+export area2diam, px2micron
 """
     area2diam(area)
 Computes the diameter of a circle with given area.
@@ -31,3 +33,5 @@ julia> px2micron(100, 2.5)
 function px2micron(length, scale_factor)
     return length / scale_factor
 end
+
+end # module

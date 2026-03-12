@@ -3,7 +3,8 @@ using DataFrames
 using JSON
 using Plots
 using Statistics
-include("utilities.jl") # Include utility functions if needed
+include("utilities.jl") # Include utility functions
+using .Utilities # In this case the include/using sytax is not needed, but if utilities.jl had internal helper functions that are not exported, this helps keeping the namespace clean.
 
 # Path setup
 raw_data_dir = normpath(joinpath(@__DIR__, "..", "raw_data")) # For reproducibility, @__DIR__ outputs the pwd as a string, so it works as well if the script is run from a different directory
@@ -74,5 +75,5 @@ for (i,file) in enumerate(readdir(processed_data_dir))
     end
 end
 
-println("Saving diameter distribution plot to:")
+println("Saving diameter distribution plot...")
 savefig(p, joinpath(plots_dir, "diameter_distributions.png"))
