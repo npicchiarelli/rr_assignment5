@@ -75,5 +75,5 @@ for (i,file) in enumerate(readdir(processed_data_dir))
     end
 end
 
-println("Saving diameter distribution plot to:")
+println("Saving diameter distribution plot...")
 savefig(p, joinpath(plots_dir, "diameter_distributions.png"))
